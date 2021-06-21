@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css?family=Numans');
+
+html, body{
+    /*../resources/pexels-lorenzo-242236.jpg*/
+    background: url(https://static.vecteezy.com/system/resources/previews/002/008/894/non_2x/abstract-white-flowing-particles-on-gray-background-with-lighting-technology-digital-futuristic-concept-vector.jpg);
+    background-size: cover;
+    background-repeat: repeat-y;
+    height: 100vh;
+    width: 100vw;
+    font-family: 'Numans', sans-serif;
+}
+
+caption{
+    caption-side:top;
+}
+
+.greeting{ 
+    margin: auto;
+    text-align:center;
+    background: url();
+    background-size:cover;
+    object-fit:cover;
+    padding:0;
+    height: 200px;
+    width: 980px;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 0.4fr 1.6fr;
+    gap: 0px 0px;
+    grid-auto-flow: row;
+    grid-template-areas:
+      "greeting greeting"
+      "left-side right-side";
+    height: 100vh;
+    width: 100vw;
+    padding: 0px;
+  }
+  
+  .greeting { 
+    grid-area: greeting; 
+    height: 100%;
+    width: 100%;
+    margin: auto 0px;
+    align-content: center;
+}
+  
+  .right-side { grid-area: right-side;
+    height: 100%;
+    width: 100%;
+    margin:0; 
+    padding-left: 10px;
+    padding-top: 10px;
+  }
+  
+  .left-side { grid-area: left-side; 
+    height: 100%;
+    width: 100%;
+    margin:0;
+    padding-right: 10px;
+    padding-top: 10px;
+  }
+
+  .reqApprove{
+    padding-top: 30px;
+
+  }
+
+  /*manager tools button*/
+  .btn-10 {
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+  .btn-10:after {
+    position: absolute;
+    content: " ";
+    top: 0;
+    left: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    transition: all 0.3s ease;
+    -webkit-transform: scale(.1);
+    transform: scale(.1);
+  }
+  .btn-10:hover {
+    color: rgb(68, 117, 163);
+  }
+  .btn-10:hover:after {
+    background: #000;
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+
+  .accept {
+    color: #FFF;
+    background: #44CC44;
+    padding: 8px 12px;
+    box-shadow: 0 4px 0 0 #2EA62E;
+  }
+  .accept:hover {
+    background: #6FE76F;
+    box-shadow: 0 4px 0 0 #7ED37E;
+  }
+  .deny {
+    color: #FFF;
+    background: tomato;
+    padding: 8px 12px;
+    box-shadow: 0 4px 0 0 #CB4949;
+  }
+  .deny:hover {
+    background: rgb(255, 147, 128);
+    box-shadow: 0 4px 0 0 #EF8282;
+  }
+
+  .accept{
+    border: none;
+    outline: none;
+  }
+
+  .deny{
+    border: none;
+    outline: none;
+  }
+  

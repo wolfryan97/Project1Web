@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Tools Page</title>
+    <!--Bootsrap 4 CDN-->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    
+    <!--Fontawesome CDN-->
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+
+	<!--Custom styles-->
+	<link rel="stylesheet" type="text/css" href="stylesMain.css">
+</head>
+<body>
+    <div class="container">
+        <div class="greeting">
+            <img src="https://images.squarespace-cdn.com/content/v1/56fc93d8555986141a2b751e/1568743447459-LE45AAGAJ44IIJ29AP7J/ke17ZwdGBToddI8pDm48kFCPt5-3T0a7xPlxzmr2BNxZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZamWLI2zvYWH8K3-s_4yszcp2ryTI0HqTOaaUohrI8PI0vObADC4vPO406SesYiqme-ATmlZ0NPuin9iF15eomI/digital-banner-2.gif?format=1500w" alt="revature banner" />
+            <p><br /></p>
+            <h2 id="sayName"></h2>
+        </div>
+
+        <div class="left-side">
+            <button class="custom-btn btn-10" id="back" onclick="back()">Back</button>
+            <button class="custom-btn btn-10" id="viewStatistics" onclick="stats()">View Statistics</button>
+            <button class="custom-btn btn-10" id="logout" onclick="logout()">Logout</button>
+        
+            <table class="reqViewer table table-bordered">
+                <caption>Request Management</caption>
+                <thead class="thead-dark"><th><b>Name</b></th><th><b>Amount</b></th><th><b>Description</b></th><th><b>Date Submitted</b></th><th><b>Manager Comments</b></th><th><b>Approve</b></thead>
+                <tbody id="reqApprovalBody"></tbody>
+            </table>
+
+        </div>
+
+      </div>
+
+</body>
+<script>
+    let mgrName = ""
+
+    function logout(){
+        window.location.replace(`index.html`) // will clear localStorage
+    }
+    function back(){
+        window.location.href = "empPage.html" // will not clear localStorage
+    }
+
+    function stats(){
+        window.location.href = "statistics.html" // will not clear localStorage
+    }
+
+    //first get all employees
+    //then loop each employee to add everything not reviewed
+    async function getPendingRequests(){
+        const response = await fetch(`http://localhost:5000/employees`)
+        const emps = await response.json()
+        
+
+        innerRows = ""
+        //loop all emps
+        for(let emp of emps){
+            const reqResponse = await fetch(`http://localhost:5000/employees/${emp.empID}/requests`)
+            const reqs = await reqResponse.json()
+
+            for(let req of reqs){
+                //get list of emp requests
+                if(Boolean(req.reviewed)==false){
+                    mgrName = "mgrCommentInput" + req.reqID
+                    acceptName = "accept" + req.reqID
+                    denyName = "deny" + req.reqID
+                    innerRows+=`<tr>
+                    <td>${emp.firstname + " " + emp.lastname}</td>
+                    <td>${req.reqAmount}</td>
+                    <td>${req.reqDesc}</td>
+                    <td>${req.reqDate}</td>
+                    <td><textarea name="mgrComments" id="${mgrName}" placeholder="Enter Comments" rows="4" cols="30" value=""></textarea></td>
+                    <td><br /><center><button class="accept" id="${acceptName}" onclick="accept(${emp.empID}, ${req.reqID})">ACCEPT</button><br /><br />
+                    <button class="deny" id="${denyName}" onclick="deny(${emp.empID}, ${req.reqID})">DENY</button></center></td>
+                    </tr>`
+                }
+            }
+        }
+        reqApprovalBody.innerHTML = innerRows
+    }
+
+    async function accept(e_id = 0, r_id = 0){
+        name = "mgrCommentInput" + r_id
+        const response = await fetch(`http://localhost:5000/employees/${e_id}/requests/${r_id}/approve?msg=${document.getElementById(name).value}`,{method:"PATCH"})
+        if(response.status === 200){
+            alert("Request accepted.")
+            await getPendingRequests()
+        }
+        else{
+            alert("An Error Occured.")
+        }
+    }
+
+    async function deny(e_id = 0, r_id = 0){
+        name = "mgrCommentInput" + r_id
+        const response = await fetch(`http://localhost:5000/employees/${e_id}/requests/${r_id}/deny?msg=${document.getElementById(name).value}`,{method:"PATCH"})
+        if(response.status === 200){
+            alert("Request denied.")
+            await getPendingRequests()
+        }
+        else{
+            alert("An Error Occured.")
+        }
+    }
+
+    getPendingRequests()
+
+    //Welcomes User by Name
+    function sayName(){
+        document.getElementById("sayName").innerHTML = `<i>Hello ${localStorage.getItem("firstname")} ${localStorage.getItem("lastname")}</i>`
+    }
+    sayName()
+</script>
+</html>

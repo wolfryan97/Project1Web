@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistics Page</title>
+    <!--Bootsrap 4 CDN-->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    
+    <!--Fontawesome CDN-->
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+
+	<!--Custom styles-->
+	<link rel="stylesheet" type="text/css" href="stylesMain.css">
+
+    <!--Google Pie Chart-->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+      google.charts.setOnLoadCallback(drawChart2);
+
+      function drawChart() {
+        let dataArray = [['Employee', 'Amount Requested']]
+        //fetch each emp... then calc total requested
+        async function getEmployeeChartData(){
+            const response = await fetch(`http://localhost:5000/employees`)
+            const emps = await response.json()
+            //loop each emp
+            for(let emp of emps){
+                const reqResponse = await fetch(`http://localhost:5000/employees/${emp.empID}/requests`)
+                const reqs = await reqResponse.json()
+
+                //loop each request from the emp
+                let reqTotal = 0
+                for(let req of reqs){
+                    reqTotal += Number(req.reqAmount)
+                }
+                dataArray.push([emp.firstname + " " + emp.lastname, reqTotal])
+            }
+            var data = google.visualization.arrayToDataTable(dataArray);
+            var options = {
+            backgroundColor: 'transparent',
+            title: 'Requested Amounts by Individual ($)',
+            is3D: true
+            };
+
+            var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+            chart.draw(data, options);
+
+        }
+        getEmployeeChartData()
+        }//END OF PIE CHART
+
+        //BAR CHART
+
+        let dataArray2 = [["Statistics", "Amount ($)", { role: "style" } ]]
+        function drawChart2() {
+            let mean = 0
+            let medianArray = []
+            let median = 0
+            let count = 0
+            let reqTotal = 0
+            async function getStatistics(){
+                const response = await fetch(`http://localhost:5000/employees`)
+                const emps = await response.json()
+                //loop each emp
+                for(let emp of emps){
+                    const reqResponse = await fetch(`http://localhost:5000/employees/${emp.empID}/requests`)
+                    const reqs = await reqResponse.json()
+                    //loop each request from the emp
+                    
+                    for(let req of reqs){
+                        reqTotal += Number(req.reqAmount)
+                        count++
+                        medianArray.push(Number(req.reqAmount))
+                    }
+                }
+                mean = reqTotal/count
+                const arrSort = medianArray.sort();
+                const mid = Math.ceil(medianArray.length / 2);
+
+                median = medianArray.length % 2 == 0 ? (arrSort[mid] + arrSort[mid - 1]) / 2 : arrSort[mid - 1];
+
+                console.log("median: ", median);
+                dataArray2.push(["Mean", mean, "tomato"])
+                dataArray2.push(["Median", median, "#3CB371"])
+
+                var data2 = google.visualization.arrayToDataTable(dataArray2);
+
+                var view2 = new google.visualization.DataView(data2);
+                view2.setColumns([0, 1,
+                                { calc: "stringify",
+                                    sourceColumn: 1,
+                                    type: "string",
+                                    role: "annotation" },
+                                2]);
+
+                var options2 = {
+                    backgroundColor: 'transparent',
+                    title: "Manager Statistics",
+                    width: 600,
+                    height: 400,
+                    bar: {groupWidth: "95%"},
+                    legend: { position: "none" },
+                };
+                var chart2 = new google.visualization.ColumnChart(document.getElementById("columnchart"));
+                chart2.draw(view2, options2);
+            }
+            getStatistics()
+        }
+      
+      
+      
+      
+        
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="greeting">
+            <img src="https://images.squarespace-cdn.com/content/v1/56fc93d8555986141a2b751e/1568743447459-LE45AAGAJ44IIJ29AP7J/ke17ZwdGBToddI8pDm48kFCPt5-3T0a7xPlxzmr2BNxZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZamWLI2zvYWH8K3-s_4yszcp2ryTI0HqTOaaUohrI8PI0vObADC4vPO406SesYiqme-ATmlZ0NPuin9iF15eomI/digital-banner-2.gif?format=1500w" alt="revature banner" />
+            <p><br /></p>
+            <h2 id="sayName"></h2>
+        </div>
+
+        <div class="left-side">
+            <button class="custom-btn btn-10" id="back" onclick="back()">Back</button>
+            <button class="custom-btn btn-10" id="logout" onclick="logout()">Logout</button>
+            <div id="piechart" style="width: 900px; height: 450px;"></div>
+            <div id="columnchart" style="width: 800px; height: 450px;"></div>
+        </div>
+
+            
+            
+
+      </div>
+
+</body>
+<script>
+    function logout(){
+        window.location.replace(`index.html`) // will clear localStorage
+    }
+    function back(){
+        window.location.href = "mgrPage.html" // will not clear localStorage
+    }
+
+    //Welcomes User by Name
+    function sayName(){
+        document.getElementById("sayName").innerHTML = `<i>Hello ${localStorage.getItem("firstname")} ${localStorage.getItem("lastname")}</i>`
+    }
+    sayName()
+</script>
+</html>

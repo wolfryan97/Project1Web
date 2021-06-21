@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Page</title>
+    <!--Bootsrap 4 CDN-->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    
+    <!--Fontawesome CDN-->
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+
+	<!--Custom styles-->
+	<link rel="stylesheet" type="text/css" href="stylesMain.css">
+</head>
+<body>
+    <div class="container">
+        <div class="greeting">
+            <img src="https://images.squarespace-cdn.com/content/v1/56fc93d8555986141a2b751e/1568743447459-LE45AAGAJ44IIJ29AP7J/ke17ZwdGBToddI8pDm48kFCPt5-3T0a7xPlxzmr2BNxZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZamWLI2zvYWH8K3-s_4yszcp2ryTI0HqTOaaUohrI8PI0vObADC4vPO406SesYiqme-ATmlZ0NPuin9iF15eomI/digital-banner-2.gif?format=1500w" alt="revature banner" />
+            <p><br /></p>
+            <h2 id="sayName"></h2>
+        </div>
+
+        <div class="left-side">
+            <button class="custom-btn btn-10" onclick="logout()" id="logout">Logout</button>
+
+            <table class="reqAdder table table-bordered">
+                <caption>Request Submission</caption>
+                <thead class="thead-dark"><th><b>Amount ($)</b></th><th><b>Description</b></th><th><b></b></th></thead>
+                <tbody>
+                    <tr>
+                        <td><input name="amount" id="amountInput" type="number" placeholder="Enter Amount"></td>
+                        <td><textarea name="description" id="descriptionInput" placeholder="Enter Description" rows="4" cols="30"></textarea></td>
+                        <td><button onclick="addReq()" id="reqSubmit">Submit Request</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        
+            <table class="reqViewer table table-bordered" id="pending">
+                <caption>Pending Requests</caption>
+                <thead class="thead-dark"><th><b>Amount</b></th><th><b>Description</b></th><th><b>Date Submitted</b></th></thead>
+                <tbody id="reqViewerBody"></tbody>
+            </table>
+
+        </div>
+
+        <div class="right-side">
+            <button class="custom-btn btn-10" onclick="managerTools()" id="managerTools">Manager Tools</button>
+
+
+            <table class="reqApprove table table-bordered" id="reviewed">
+                <caption>Resolved Requests</caption>
+                <thead class="thead-dark"><th><b>Amount</b></th><th><b>Manager Message</b></th><th><b>Date Submitted</b></th><th><b>Approved</b></th><thead>
+                <tbody id="reqReviewedBody"></tbody>
+            </table>
+
+        </div>
+
+      </div>
+
+
+</body>
+<script>
+    const amountInput = document.getElementById("amountInput");
+    const descriptionInput = document.getElementById("descriptionInput");
+
+    //Welcomes User by Name
+    function sayName(){
+        document.getElementById("sayName").innerHTML = `<i>Hello ${localStorage.getItem("firstname")} ${localStorage.getItem("lastname")}</i>`
+    }
+    sayName()
+
+    //add button
+    async function addReq() {
+        if(amountInput.value == "" || amountInput.value <= 0){
+            alert("Please enter a positive number for Amount.")
+            return;
+        }
+        //No more than 3 requests at a time
+        async function checkIf3(){
+            const response = await fetch(`http://localhost:5000/employees/${localStorage.getItem("empID")}/requests`)
+            const emps = await response.json() //get all requests from that employee
+            const empsWaiting = [] //get all requests not reviewed from that employee
+            for(let x of emps){
+                if(x.reviewed == false){
+                    empsWaiting.push(x)
+                }
+            }
+            if(empsWaiting.length >= 3){
+                alert("No more than 3 requests allowed at a given time.")
+                let atLeast3 = true
+                document.getElementById("amountInput").value = ""
+                document.getElementById("descriptionInput").value = ""
+                return atLeast3;
+            }
+        }
+        cIf3 = await checkIf3()
+        console.log(cIf3)
+        if(cIf3 == true){
+            return;
+        }
+
+        const request = {
+            reqID:0,
+            empID:0,
+            reqAmount:amountInput.value,
+            reqDesc:descriptionInput.value,
+            reqDate:"",
+            approved:false,
+            mgrMessage:"",
+            reviewed:false
+        }
+        
+
+        const configPost = {
+            method:"POST",
+            headers:{'Content-Type':"application/json"},
+            body: JSON.stringify(request)
+        }
+
+        
+        const response = await fetch(`http://localhost:5000/employees/${localStorage.getItem("empID")}/requests`, configPost)
+
+        if(response.status==201){
+            getRequestsByUser();
+            document.getElementById("amountInput").value = ""
+            document.getElementById("descriptionInput").value = ""
+            alert("The request was successfully added.")
+        }
+        else{
+            alert("Something went wrong... Request not added.")
+        }
+    }
+
+    //table of pending requests
+    async function getRequestsByUser(){ 
+            const response = await fetch(`http://localhost:5000/employees/${localStorage.getItem("empID")}/requests`)
+            if(response.status==200){
+                const reqs = await response.json()
+
+            let innerRows = ""
+            for(let request of reqs){
+                if(Boolean(request.reviewed) == false){
+                    innerRows += `<tr>
+                        <td>${request.reqAmount}</td>
+                        <td>${request.reqDesc}</td>
+                        <td>${request.reqDate}</td>
+                        </tr>`
+                    //<td><center><button class="deny" id="cancel" onclick="cancel(${request.empID}, ${request.reqID})">CANCEL</button></center></td>
+                }
+            }
+            reqViewerBody.innerHTML = innerRows
+            }
+            else{
+                console.log("There are no requests for this user")
+            }
+        }
+    getRequestsByUser()
+
+    //table of reviewed requests
+    async function getReviewedByUser() {
+        const response = await fetch(`http://localhost:5000/employees/${localStorage.getItem("empID")}/requests`)
+        const reqs = await response.json()
+
+        let innerRows = ""
+        for(let request of reqs){
+            if(Boolean(request.reviewed)){
+                innerRows += `<tr>
+                    <td>${request.reqAmount}</td>
+                    <td>${request.mgrMessage}</td>
+                    <td>${request.reqDate}</td>
+                    <td>${Boolean(request.approved) ? "Yes" : "No"}</td>`
+            }
+        }
+        reqReviewedBody.innerHTML = innerRows
+
+    }
+    getReviewedByUser()
+
+    async function managerTools(){
+        const response = await fetch(`http://localhost:5000/employees/${localStorage.getItem("empID")}`)
+        const req = await response.json()
+
+        if(Boolean(req.isManager)){
+            window.location.href = "mgrPage.html" //href saves localstorage
+        }
+        else{
+            alert("You must be a manager for this feature.")
+        }
+    }
+
+    function logout(){
+        window.location.replace(`index.html`) // will clear localStorage
+    }
+
+</script>
+</html>
